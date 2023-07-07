@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use PDF;
 use App\Models\Employee;
 use App\Models\Position;
 use Illuminate\Http\Request;
@@ -9,25 +10,32 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RealRashid\SweetAlert\Facades\Alert;
 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeesExport;
 
 class EmployeeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-
+    public function index(){
         $pageTitle = 'Employee List';
 
-        // ELOQUENT
-        $employees = Employee::all();
+        confirmDelete();
 
-        return view('employee.index', [
-            'pageTitle' => $pageTitle,
-            'employees' => $employees
-        ]);
+        return view('employee.index', compact('pageTitle'));
+
+        // $pageTitle = 'Employee List';
+
+        // // ELOQUENT
+        // $employees = Employee::all();
+
+        // return view('employee.index', [
+        //     'pageTitle' => $pageTitle,
+        //     'employees' => $employees
+        // ]);
     }
 
     /**
@@ -50,6 +58,11 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
+        // Meletakkan SweetAlert
+        Alert::success('Added Successfully', 'Employee Data Added Successfully.');
+
+        return redirect()->route('employees.index');
+
         // Mendefinisikan pesan kesalahan untuk validasi input
         $messages = [
             'required' => ':attribute harus diisi.',
@@ -133,6 +146,11 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Meletakkan SweetAlert
+        Alert::success('Changed Successfully', 'Employee Data Changed Successfully.');
+
+        return redirect()->route('employees.index');
+
         $messages = [
             'required' => ':Attribute harus diisi.',
             'email' => 'Isi :attribute dengan format yang benar',
@@ -205,6 +223,11 @@ class EmployeeController extends Controller
      */
     public function destroy(string $id)
     {
+        // Meletakkan SweetAlert
+        Alert::success('Deleted Successfully', 'Employee Data Deleted Successfully.');
+
+        return redirect()->route('employees.index');
+
         // ELOQUENT
         $employee = Employee::find($id);
 
@@ -234,5 +257,37 @@ class EmployeeController extends Controller
             return Storage::download($encryptedFilename, $downloadFilename);
         }
     }
+
+    // method getData()
+    public function getData(Request $request)
+    {
+    $employees = Employee::with('position');
+
+    if ($request->ajax()) {
+        return datatables()->of($employees)
+            ->addIndexColumn()
+            ->addColumn('actions', function($employee) {
+                return view('employee.actions', compact('employee'));
+            })
+            ->toJson();
+        }
+    }
+
+    // EXCEL
+    public function exportExcel()
+    {
+    return Excel::download(new EmployeesExport, 'employees.xlsx');
+    }
+
+    // PDF
+    public function exportPdf()
+    {
+    $employees = Employee::all();
+
+    $pdf = PDF::loadView('employee.export_pdf', compact('employees'));
+
+    return $pdf->download('employees.pdf');
+    }
+
 
 }

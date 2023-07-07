@@ -114,17 +114,27 @@ Route::get('download-file/{employeeId}', [EmployeeController::class, 'downloadFi
 
 
 
-Route::get('home',[HomeController::class, 'index'])->name('home');
+// Route::get('home',[HomeController::class, 'index'])->name('home');
 
-Route::get('profile', ProfileController::class)->name('profile');
+// Route::get('profile', ProfileController::class)->name('profile');
 
-Route::resource('employees',EmployeeController::class);
+// Route::resource('employees',EmployeeController::class);
 
-Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
+// Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
+
+// Auth::routes();
+
+// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Route::redirect('/', '/login');
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('profile', ProfileController::class)->name('profile');
+    Route::resource('employees', EmployeeController::class);
+});
 
 
 // Latihan Edit
@@ -136,3 +146,13 @@ Route::post('/upload-example', function(Request $request) {
     $path = $request->file('avatar')->store('public');
     return $path;
 })->name('upload-example');
+
+Route::get('getEmployees', [EmployeeController::class, 'getData'])->name('employees.getData');
+
+// EXCEL
+Route::get('exportExcel', [EmployeeController::class, 'exportExcel'])->name('employees.exportExcel');
+
+// LOMPDF
+Route::get('exportPdf', [EmployeeController::class, 'exportPdf'])->name('employees.exportPdf');
+
+
